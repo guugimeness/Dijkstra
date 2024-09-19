@@ -1,59 +1,52 @@
 import networkx as nx
 from heapq import heapify, heappop, heappush
 
-nodes = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-G = nx.Graph()
-
-G.add_nodes_from(nodes)
-
-# Arestas
-edges = [
-    (0, 1, 4), (0, 6, 7), (1, 2, 9), (1, 6, 11), (1, 7, 20),
-    (2, 3, 6), (2, 4, 2), (3, 4, 10), (3, 5, 5), (4, 5, 15),
-    (4, 7, 1), (4, 8, 5), (5, 8, 12), (6, 7, 1), (7, 8, 3)
-]
-G.add_weighted_edges_from(edges)
-
 def Dijkstra(G: nx.Graph, s):
     # init
     distances = {node: float("inf") for node in G.nodes}    # lambda(v)
     predecessors = {node: None for node in G.nodes}         # pi(v)
-    distances[s] = 0
+    distances[s] = 0    # lambda(raiz) = 0
     
-    # lista de prioridades
+    # fila de prioridades
     Q = []
     heapify(Q)
     for node in distances:
         heappush(Q, (distances[node], node))
+    print(f'Fila inicial: {Q=}')
+    print()
+
+    # set para marcar os vértices que já saíram da fila
+    visited = set()
     
-    print(Q)
     while Q:
-        current_distance, current_node = heappop(Q)
-        print(f'{current_node=}')                 # extrair node com maior prioridade
-        for v in list(G.adj[current_node]):                         # para cada vizinho do node atual:
-            print(f'{v=}')
-            weight = G.get_edge_data(v, current_node)['weight']     # peso da aresta entre o node atual e um de seus vizinhos
-            new_distance = current_distance + weight
-            if new_distance < distances[v]:
-                # o melhor caminho para chegar em v é pelo node atual                         
-                distances[v] = new_distance
-                predecessors[v] = current_node
-                Q = update_priority(Q, v, new_distance)
-            print(Q)
-            print(predecessors)
-            print()
+        u_distance, u = heappop(Q)                  # extrair vértice com maior prioridade
+        visited.add(u)                              
+        
+        for v in list(G.adj[u]):        # para cada vizinho de u:
+            if v in visited:        # vértice saiu da fila -> não muda mais o caminho até ele
+                continue
             
-    print(distances)
-    print(predecessors)
-    
+            print(f'{u=} {v=}')
+            weight = G.get_edge_data(v, u)['weight']     # peso da aresta entre o node atual(u) e um de seus vizinhos(v): w(u, v)
+            new_distance = u_distance + weight          
+            
+            if new_distance < distances[v]:         # verifica se é melhor chegar em v por u
+                distances[v] = new_distance
+                predecessors[v] = u
+                Q = update_priority(Q, v, new_distance)
+                
+            print(f'{Q=}')
+            print(f'{predecessors=}')
+            print()
+                
+    return predecessors, distances
+
+# método para atualizar a prioridade na fila
 def update_priority(Q, element, new_priority):
-    # Remover a entrada existente
+    # remover a entrada existente
     Q = [item for item in Q if item[1] != element]
     
-    # Inserir o novo elemento com prioridade atualizada
+    # inserir o novo elemento com prioridade atualizada
     heappush(Q, (new_priority, element))
     
     return Q
-
-Dijkstra(G, 0)
-    
